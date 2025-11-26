@@ -38,3 +38,7 @@ cmake-build-*/
 
 # vsxmake
 vsxmake*/
+
+# bazel
+bazel-*
+MODULE.bazel.lock

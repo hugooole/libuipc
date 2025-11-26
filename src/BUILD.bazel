@@ -1,0 +1,29 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+uipc_backend_commons_srcs = glob(["backends/common/**/*.cpp"])
+uipc_backend_commons_hdrs = glob(["backends/common/**/*.h", "backends/common/**/*.inl"])
+
+cc_library(
+    name = "uipc_backends_none",
+    srcs = glob(["backends/none/**/*.cpp"]) + uipc_backend_commons_srcs,
+    hdrs = glob(["backends/none/**/*.h"]) + uipc_backend_commons_hdrs,
+    includes = [".", "backends/none"],
+    copts = [
+        "-std=c++20",
+        "-Iexternal/cppitertools+",
+    ],
+    defines = [
+        "UIPC_BACKEND_EXPORT_DLL",
+        "UIPC_BACKEND_DIR=R\\\"(/home/ps/Projects/libuipc/src/backends)\\\"",
+        "UIPC_BACKEND_NAME=R\\\"(none)\\\"",
+    ],
+    deps = [
+        "//:uipc_include",
+        "@spdlog//:spdlog",
+        "@eigen//:eigen",
+        "@cpptrace//:cpptrace",
+        "@nlohmann_json//:json",
+        "@cppitertools//:cppitertools",
+    ],
+    visibility = ["//visibility:public"],
+)

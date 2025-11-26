@@ -29,4 +29,5 @@ rule("backend")
         )
 
         target:add("deps", "uipc_core")
+        print(target:get("defines"))
     end)

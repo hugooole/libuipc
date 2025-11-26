@@ -1,0 +1,47 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//bazel:version.bzl", "UIPC_VERSION_MAJOR", "UIPC_VERSION_MINOR", "UIPC_VERSION_PATCH")
+
+cc_library(
+    name = "uipc_core",
+    srcs = glob(["**/*.cpp"]),
+    hdrs = glob(["**/*.h"]),
+    defines = [
+        "UIPC_RUNTIME_CHECK=1",
+        "UIPC_VERSION_MAJOR={}".format(UIPC_VERSION_MAJOR),
+        "UIPC_VERSION_MINOR={}".format(UIPC_VERSION_MINOR),
+        "UIPC_VERSION_PATCH={}".format(UIPC_VERSION_PATCH),
+    ] + select({
+        "@platforms//os:windows": [
+            "NOMINMAX",
+        ],
+        "//conditions:default": [],
+    }),
+    local_defines = [
+        "UIPC_CORE_EXPORT_DLL=1",
+    ],
+    copts = [
+        "-std=c++20",
+        "-Iexternal/cppitertools+",  # TODO: need to add the include path for cppitertools
+    ] + select({
+        "@platforms//os:windows": [
+            "/bigobj",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "@platforms//os:linux": ["-ldl"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "//:uipc_include",
+        "@eigen//:eigen",
+        "@nlohmann_json//:json",
+        "@cppitertools//:cppitertools",
+        "@magic_enum//:magic_enum",
+        "@tinygltf//:tinygltf",
+        "@cpptrace//:cpptrace",
+        "@spdlog//:spdlog",
+        "@dylib//:dylib",
+    ],
+    visibility = ["//src:__subpackages__"],
+)
