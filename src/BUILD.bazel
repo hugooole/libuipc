@@ -1,4 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cuda//cuda:defs.bzl", "cuda_library")
 
 uipc_backend_commons_srcs = glob(["backends/common/**/*.cpp"])
 uipc_backend_commons_hdrs = glob(["backends/common/**/*.h", "backends/common/**/*.inl"])
@@ -10,7 +11,6 @@ cc_library(
     includes = [".", "backends/none"],
     copts = [
         "-std=c++20",
-        "-Iexternal/cppitertools+",
     ],
     defines = [
         "UIPC_BACKEND_EXPORT_DLL",
@@ -26,4 +26,64 @@ cc_library(
         "@cppitertools//:cppitertools",
     ],
     visibility = ["//visibility:public"],
+)
+
+uipc_backend_cuda_cu_srcs = glob(["backends/cuda/**/*.cu"])
+uipc_backend_cuda_cpp_srcs = glob(["backends/cuda/**/*.cpp"]) + uipc_backend_commons_srcs
+
+cuda_library(
+    name = "uipc_backends_cuda_cu",
+    srcs = uipc_backend_cuda_cu_srcs,
+    hdrs = glob(["backends/cuda/**/*.h", "backends/cuda/**/*.hpp", "backends/cuda/**/*.inl"]) + uipc_backend_commons_hdrs,
+    includes = [".", "backends/cuda"],
+    copts = [
+        "-std=c++20",
+    ],
+    rdc = True,
+    defines = [
+        "UIPC_BACKEND_EXPORT_DLL",
+        "UIPC_BACKEND_DIR=R\\\"(/home/ps/Projects/libuipc/src/backends)\\\"",
+        "UIPC_BACKEND_NAME=R\\\"(cuda)\\\"",
+    ],
+    deps = [
+        "//:uipc_include",
+        "@spdlog//:spdlog",
+        "@eigen//:eigen",
+        "@cpptrace//:cpptrace",
+        "@nlohmann_json//:json",
+        "@cppitertools//:cppitertools",
+        "@cuda//:cublas",
+        "@cuda//:cusparse",
+        "@cuda//:cusolver",
+        "@cuda//:cub",
+        "@hugooole_muda//:muda",
+    ],
+    visibility = ["//src:__subpackages__"],
+)
+
+# 然后编译 C++ 文件并链接 CUDA 库
+cc_library(
+    name = "uipc_backends_cuda",
+    srcs = uipc_backend_cuda_cpp_srcs,
+    hdrs = glob(["backends/cuda/**/*.h", "backends/cuda/**/*.hpp", "backends/cuda/**/*.inl"]) + uipc_backend_commons_hdrs,
+    includes = [".", "backends/cuda"],
+    copts = [
+        "-std=c++20",
+    ],
+    defines = [
+        "UIPC_BACKEND_EXPORT_DLL",
+        "UIPC_BACKEND_DIR=R\\\"(/home/ps/Projects/libuipc/src/backends)\\\"",
+        "UIPC_BACKEND_NAME=R\\\"(cuda)\\\"",
+    ],
+    deps = [
+        ":uipc_backends_cuda_cu",  # 链接 CUDA 库
+        "//:uipc_include",
+        "//src/geometry:uipc_geometry",
+        "@spdlog//:spdlog",
+        "@eigen//:eigen",
+        "@cpptrace//:cpptrace",
+        "@nlohmann_json//:json",
+        "@cppitertools//:cppitertools",
+    ],
+    visibility = ["//src:__subpackages__"],
 )

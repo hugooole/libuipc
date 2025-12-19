@@ -1,0 +1,17 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "uipc_constitution",
+    srcs = glob(["**/*.cpp"]),
+    hdrs = glob(["**/*.h", "**/*.inl", "**/*.hpp"], allow_empty = True),
+    includes = ["."],
+    local_defines = [
+        "UIPC_CONSTITUTION_EXPORT_DLL=1",
+    ],
+    deps = [
+        "//:uipc_include",
+        "//src/core:uipc_core",
+        "//src/geometry:uipc_geometry",
+    ],
+    visibility = ["//src:__subpackages__"],
+)

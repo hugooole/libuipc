@@ -1,1 +1,6 @@
---registry=file:///home/ps/Projects/bazel-central-registry
+common --enable_bzlmod
+common --registry=https://raw.githubusercontent.com/hugooole/bazel-central-registry/dev
+common --registry=https://bcr.bazel.build
+common --cxxopt=-std=c++20
+
+build --flag_alias=cuda_archs=@rules_cuda//cuda:archs

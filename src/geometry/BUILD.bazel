@@ -1,0 +1,20 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "uipc_geometry",
+    srcs = glob(["**/*.cpp"]),
+    hdrs = glob(["**/*.h", "**/*.inl", "**/*.hpp"], allow_empty = True),
+    includes = [".", "implicit_geometries", "affine_body", "bvh", "graph_coloring"],
+    local_defines = [
+        "UIPC_GEOMETRY_EXPORT_DLL=1",
+    ],
+    deps = [
+        "//:uipc_include",
+        "//src/core:uipc_core",
+        "@libigl//:igl_core",
+        "@octree//:octree",
+        "@onetbb//:tbb",
+        "@cppitertools//:cppitertools",
+    ],
+    visibility = ["//src:__subpackages__"],
+)

@@ -1,0 +1,20 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension", "pybind_library")
+
+pybind_library(
+    name = "pyuipc_headers",
+    hdrs = glob(["pyuipc/**/*.h"]),
+    includes = ["."],
+)
+
+pybind_extension(
+    name = "pyuipc",
+    srcs = glob(["pyuipc/**/*.cpp"]),
+    deps = [
+        ":pyuipc_headers",
+        "//src/core:uipc_core",
+        "//src/geometry:uipc_geometry",
+        "//src/constitution:uipc_constitution",
+        "//src/io:uipc_io",
+        "//src/sanity_check:uipc_sanity_check",
+    ],
+)
