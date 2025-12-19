@@ -1,7 +1,5 @@
 #include <affine_body/abd_time_integrator.h>
 #include <time_integrator/bdf1_flag.h>
-#include <kernel_cout.h>
-#include <muda/ext/eigen/log_proxy.h>
 
 namespace uipc::backend::cuda
 {
@@ -31,25 +29,26 @@ class ABDBDF1Integrator final : public ABDTimeIntegrator
                     q_vs       = info.q_vs().cviewer().name("q_velocities"),
                     q_tildes   = info.q_tildes().viewer().name("q_tilde"),
                     affine_gravity = info.gravities().cviewer().name("affine_gravity"),
-                    dt   = info.dt(),
-                    cout = KernelCout::viewer()] __device__(int i) mutable
+                    external_force_accs = info.external_force_accs().cviewer().name("external_force_accs"),
+                    dt   = info.dt()] __device__(int i) mutable
                    {
                        // record previous q
                        auto& q_prev = q_prevs(i);
                        q_prev       = qs(i);
 
-                       auto& q_v = q_vs(i);
-                       auto& g   = affine_gravity(i);
+                       auto& q_v    = q_vs(i);
+                       auto& g      = affine_gravity(i);
+                       auto& f_ext_acc  = external_force_accs(i);
 
                        // 0) fixed: q_tilde = q_prev;
                        Vector12 q_tilde = q_prev;
 
                        if(!is_fixed(i))
                        {
-                           // 1) static problem: q_tilde = q_prev + g * dt * dt;
-                           q_tilde += g * dt * dt;
+                           // 1) static problem: q_tilde = q_prev + (g + f_ext_acc) * dt * dt;
+                           q_tilde += (g + f_ext_acc) * dt * dt;
 
-                           // 2) dynamic problem q_tilde = q_prev + q_v * dt + g * dt * dt;
+                           // 2) dynamic problem q_tilde = q_prev + q_v * dt + (g + f_ext_acc) * dt * dt;
                            if(is_dynamic(i))
                            {
                                q_tilde += q_v * dt;

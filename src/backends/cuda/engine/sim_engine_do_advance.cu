@@ -8,6 +8,7 @@
 #include <line_search/line_searcher.h>
 #include <linear_system/global_linear_system.h>
 #include <animator/global_animator.h>
+#include <external_force/global_external_force_manager.h>
 #include <diff_sim/global_diff_sim_manager.h>
 #include <newton_tolerance/newton_tolerance_manager.h>
 #include <time_integrator/time_integrator_manager.h>
@@ -125,10 +126,24 @@ void SimEngine::do_advance()
 
     auto step_animation = [this]()
     {
+        // NEW LIFECYCLE: Clear and prepare external forces BEFORE animator step
+        if(m_global_external_force_manager)
+        {
+            Timer timer{"Clear External Forces"};
+            m_global_external_force_manager->clear();
+        }
+
         if(m_global_animator)
         {
             Timer timer{"Step Animation"};
             m_global_animator->step();
+        }
+
+        // NEW LIFECYCLE: Compute external force accelerations AFTER animator step
+        if(m_global_external_force_manager)
+        {
+            Timer timer{"Compute External Force Accelerations"};
+            m_global_external_force_manager->step();
         }
     };
 
@@ -261,6 +276,7 @@ void SimEngine::do_advance()
         // Simulation:
         {
             Timer timer{"Simulation"};
+
             // 1. Record Friction Candidates at the beginning of the frame
             record_friction_candidates();
             m_global_vertex_manager->update_attributes();
@@ -272,8 +288,11 @@ void SimEngine::do_advance()
 
             // 3. Predict Motion => x_tilde = x + v * dt
             m_state = SimEngineState::PredictMotion;
-            m_time_integrator_manager->predict_dof();
+            // MUST step animation before predicting dof
+            // some animation may provide information for DOF prediction
             step_animation();
+            m_time_integrator_manager->predict_dof();
+
 
             // 4. Nonlinear-Newton Iteration
             m_newton_tolerance_manager->pre_newton(m_current_frame);

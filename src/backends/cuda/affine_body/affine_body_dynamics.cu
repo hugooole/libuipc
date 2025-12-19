@@ -123,12 +123,10 @@ void AffineBodyDynamics::Impl::init(WorldVisitor& world)
     _build_constitutions(world);
     _build_geo_infos(world);
     _setup_geometry_attributes(world);
-
     _build_geometry_on_host(world);
     _build_geometry_on_device(world);
 
     _distribute_geo_infos();
-
     _init_diff_reporters();
 }
 
@@ -589,6 +587,8 @@ void AffineBodyDynamics::Impl::_build_geometry_on_host(WorldVisitor& world)
         auto    gravity_attr = scene.config().find<Vector3>("gravity");
         Vector3 gravity      = gravity_attr->view()[0];
         h_body_id_to_abd_gravity.resize(abd_body_count, Vector12::Zero());
+        body_id_to_external_force.resize(abd_body_count);
+        body_id_to_external_force_acc.resize(abd_body_count);
         for_each(geo_slots,
                  [&](const ForEachInfo& I, geometry::SimplicialComplex& sc)
                  {
@@ -641,26 +641,32 @@ void AffineBodyDynamics::Impl::_build_geometry_on_host(WorldVisitor& world)
     {
         h_body_id_to_is_fixed.resize(abd_body_count, 0);
         h_body_id_to_is_dynamic.resize(abd_body_count, 1);
+        h_body_id_to_external_kinetic.resize(abd_body_count, 0);
         for_each(
             geo_slots,
             [](geometry::SimplicialComplex& sc)
             {
                 auto is_fixed = sc.instances().find<IndexT>(builtin::is_fixed);
                 auto is_dynamic = sc.instances().find<IndexT>(builtin::is_dynamic);
+                auto external_kinetic =
+                    sc.instances().find<IndexT>(builtin::external_kinetic);
 
                 UIPC_ASSERT(is_fixed, "The is_fixed attribute is not found in the affine body geometry, why can it happen?");
                 UIPC_ASSERT(is_dynamic, "The is_dynamic attribute is not found in the affine body geometry, why can it happen?");
-
-                return zip(is_fixed->view(), is_dynamic->view());
+                UIPC_ASSERT(external_kinetic, "The is_external_kinetic attribute is not found in the affine body geometry, why can it happen?");
+                return zip(is_fixed->view(),
+                           is_dynamic->view(),
+                           external_kinetic->view());
             },
             [&](const ForEachInfo& I, auto&& data)
             {
-                auto&& [fixed, dynamic] = data;
+                auto&& [fixed, dynamic, external_kinetic] = data;
 
                 auto bodyI = I.global_index();
 
-                h_body_id_to_is_fixed[bodyI]   = fixed;
-                h_body_id_to_is_dynamic[bodyI] = dynamic;
+                h_body_id_to_is_fixed[bodyI]         = fixed;
+                h_body_id_to_is_dynamic[bodyI]       = dynamic;
+                h_body_id_to_external_kinetic[bodyI] = external_kinetic;
             });
     }
 
@@ -688,6 +694,7 @@ void AffineBodyDynamics::Impl::_build_geometry_on_device(WorldVisitor& world)
     async_copy(span{h_body_id_to_abd_gravity}, body_id_to_abd_gravity);
     async_copy(span{h_body_id_to_is_fixed}, body_id_to_is_fixed);
     async_copy(span{h_body_id_to_is_dynamic}, body_id_to_is_dynamic);
+    async_copy(span{h_body_id_to_external_kinetic}, body_id_to_external_kinetic);
 
     auto async_transfer = []<typename T>(const muda::DeviceBuffer<T>& src,
                                          muda::DeviceBuffer<T>&       dst)

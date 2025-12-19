@@ -78,10 +78,10 @@ UIPC_BUILTIN_ATTRIBUTE(constitution_uid);
 UIPC_BUILTIN_ATTRIBUTE(extra_constitution_uids);
 
 /**
- * @brief `constraint_uid` <U64> attribute on **meta**, uid is a unique identifier for a constraint
+ * @brief `constraint_uids` <VectorXu64> attribute on **meta**,  constraint uids are unique identifiers for constraints
  * which is defined in the libuipc specification.
  */
-UIPC_BUILTIN_ATTRIBUTE(constraint_uid);
+UIPC_BUILTIN_ATTRIBUTE(constraint_uids);
 
 /**
  * @brief `implicit_geometry_uid` <U64> attribute on **meta**, uid is a unique identifier for an implicit geometry
@@ -137,7 +137,7 @@ UIPC_BUILTIN_ATTRIBUTE(is_fixed);
 UIPC_BUILTIN_ATTRIBUTE(is_constrained);
 
 /**
- * @brief `is_dynamic` <IndexT>[0,1] attribute, indicates if the **instance** or **vertex** is is dynamic.
+ * @brief `is_dynamic` <IndexT>[0,1] attribute, indicates if the **instance** or **vertex** is dynamic.
  * 
  * 'Dynamic' means the kinetic of instances or vertices is considered.
  * 
@@ -145,6 +145,17 @@ UIPC_BUILTIN_ATTRIBUTE(is_constrained);
  * 2) 1 means the the kinetic of the instance or vertex is considered.
  */
 UIPC_BUILTIN_ATTRIBUTE(is_dynamic);
+
+/**
+ * @brief `external_kinetic` <IndexT>[0,1] attribute，indicates if the **instance** or **vertex** is fully controlled by external kinetic.
+ * 
+ * If an instance or vertex is marked with `external_kinetic` attribute, default kinetic computation will be skipped for it.
+ * It's always used together with Constraints to fully control the kinetic of the instance or vertex.
+ * 
+ * 1) 0 means the instance or vertex will go through default kinetic computation.
+ * 2) 1 means the instance or vertex will skip default kinetic computation.
+ */
+UIPC_BUILTIN_ATTRIBUTE(external_kinetic);
 
 /**
  * @brief `volume` <Float> attribute on **vertices**.

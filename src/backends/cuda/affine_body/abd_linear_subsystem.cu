@@ -313,7 +313,7 @@ void ABDLinearSubsystem::Impl::assemble(GlobalLinearSystem::DiagInfo& info)
     }
 
 
-    // 2) Other
+    // 3) Other
     {
         // Fill TripletMatrix and DoubletVector
         for(auto& R : reporters.view())
