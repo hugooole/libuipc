@@ -1,0 +1,14 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+cc_binary(
+    name = "hello_affine_body",
+    srcs = ["main.cpp"],
+    deps = [
+        "//src:uipc",
+        "@bazel_tools//tools/cpp/runfiles",
+    ],
+    data = [
+        "//src:uipc_backends_cuda_shared",
+    ],
+    visibility = ["//visibility:public"],
+)

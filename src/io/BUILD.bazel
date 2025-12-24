@@ -1,19 +1,34 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_shared_library")
 
 cc_library(
     name = "uipc_io",
     srcs = glob(["**/*.cpp"]),
-    hdrs = glob(["**/*.h", "**/*.inl", "**/*.hpp"], allow_empty = True),
+    hdrs = glob(
+        [
+            "**/*.h",
+            "**/*.inl",
+            "**/*.hpp",
+        ],
+        allow_empty = True,
+    ),
     includes = ["."],
     local_defines = [
         "UIPC_IO_EXPORT_DLL=1",
     ],
+    visibility = ["//src:__subpackages__"],
     deps = [
         "//:uipc_include",
         "//src/core:uipc_core",
         "//src/geometry:uipc_geometry",
-        "@urdfdom//:urdfdom",
-        "@tinygltf//:tinygltf",
+        "@tinygltf",
+        "@urdfdom",
     ],
-    visibility = ["//src:__subpackages__"],
+)
+
+cc_shared_library(
+    name = "uipc_io_shared",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":uipc_io",
+    ],
 )

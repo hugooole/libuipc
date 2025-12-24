@@ -1,14 +1,37 @@
-#include <app/asset_dir.h>
+#include "uipc/common/json.h"
+#include <filesystem>
 #include <uipc/uipc.h>
 #include <uipc/constitution/affine_body_constitution.h>
 
-int main()
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+std::string find_module_dir(const char* argv0)
+{
+    std::string error;
+    auto runfiles = Runfiles::Create(argv0, &error);
+    if (!runfiles)
+        throw std::runtime_error(error);
+
+    // workspace_name/path/to/file
+    auto so_path = runfiles->Rlocation(
+        "_main/src/libuipc_backend_cuda.so");
+
+    return std::filesystem::path(so_path).parent_path().string();
+}
+
+int main(int argc, char** argv)
 {
     using namespace uipc;
     using namespace uipc::core;
     using namespace uipc::geometry;
     using namespace uipc::constitution;
     namespace fs = std::filesystem;
+
+    Json uipc_config = Json::object();
+    uipc_config["module_dir"] = find_module_dir(argv[0]);
+    init(uipc_config);
 
     // Engine engine{"none"};
     Engine engine{"cuda"};
@@ -79,15 +102,15 @@ int main()
 
     SceneIO sio{scene};
 
-    auto this_output_path = AssetDir::output_path(__FILE__);
+    auto this_output_path = fs::path("/home/ps/Projects/libuipc/output/examples/hello_affine_body/");
 
-    sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path, 0));
+    sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path.string(), 0));
 
     for(int i = 1; i < 50; i++)
     {
         world.advance();
         world.sync();
         world.retrieve();
-        sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path, i));
+        sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path.string(), i));
     }
 }

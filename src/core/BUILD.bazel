@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_shared_library")
 load("//bazel:version.bzl", "UIPC_VERSION_MAJOR", "UIPC_VERSION_MINOR", "UIPC_VERSION_PATCH")
 
 cc_library(
@@ -44,4 +44,15 @@ cc_library(
         "@dylib//:dylib",
     ],
     visibility = ["//src:__subpackages__"],
+)
+
+cc_shared_library(
+    name = "uipc_core_shared",
+    deps = [
+        ":uipc_core",
+        "@cpptrace//:cpptrace",
+        "@spdlog//:spdlog",
+        "@tinygltf//:tinygltf",
+    ],
+    visibility = ["//visibility:public"],
 )

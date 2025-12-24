@@ -1,0 +1,15 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "uipc_app",
+    srcs = glob(["app/**/*.cpp", "app/**/*.h", "app/**/*.inl"]),
+    includes = ["."],
+    deps = [
+        "//src:uipc",
+    ],
+    local_defines = [
+        "UIPC_ASSET_PATH=R\\\"(/home/ps/Projects/libuipc/assets/)\\\"",
+        "UIPC_OUTPUT_PATH=R\\\"(/home/ps/Projects/libuipc/output/)\\\"",
+    ],
+    visibility = ["//visibility:public"],
+)

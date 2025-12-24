@@ -11,9 +11,9 @@ pybind_extension(
     srcs = glob(["pyuipc/**/*.cpp"]),
     deps = [
         ":pyuipc_headers",
+        "//src/constitution:uipc_constitution",
         "//src/core:uipc_core",
         "//src/geometry:uipc_geometry",
-        "//src/constitution:uipc_constitution",
         "//src/io:uipc_io",
         "//src/sanity_check:uipc_sanity_check",
     ],

@@ -22,6 +22,8 @@ bazel_dep(name = "libigl", version = "2.6.0")
 bazel_dep(name = "urdfdom", version = "2.3.4.bcr.1")
 bazel_dep(name = "rules_python", version = "1.7.0")
 bazel_dep(name = "pybind11_bazel", version = "3.0.0")
+bazel_dep(name = "catch2", version = "3.11.0")
+bazel_dep(name = "fmt", version = "10.2.1")
 
 # Configure Python toolchain to use system Python 3.11
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")

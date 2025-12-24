@@ -18,3 +18,12 @@ cc_library(
     ],
     visibility = ["//src:__subpackages__"],
 )
+
+cc_shared_library(
+    name = "uipc_geometry_shared",
+    deps = [
+        ":uipc_geometry",
+    ],
+    dynamic_deps = ["//src/core:uipc_core_shared"],
+    visibility = ["//visibility:public"],
+)
