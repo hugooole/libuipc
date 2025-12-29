@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_shared_library")
 
 cc_library(
     name = "uipc_geometry_lib",
@@ -34,12 +34,12 @@ cc_library(
     ],
 )
 
-#cc_shared_library(
-#    name = "uipc_geometry_shared",
-#    shared_lib_name = "libuipc_geometry.so",
-#    deps = [
-#        ":uipc_geometry_lib",
-#    ],
-#    dynamic_deps = ["//src/core:uipc_core_shared"],
-#    visibility = ["//visibility:public"],
-#)
+cc_shared_library(
+   name = "uipc_geometry_shared",
+   shared_lib_name = "libuipc_geometry.so",
+   deps = [
+       ":uipc_geometry_lib",
+   ],
+   dynamic_deps = ["//src/core:uipc_core_shared"],
+   visibility = ["//visibility:public"],
+)

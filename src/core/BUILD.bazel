@@ -47,14 +47,11 @@ cc_library(
     ],
 )
 
-#cc_shared_library(
-#    name = "uipc_core_shared",
-#    shared_lib_name = "libuipc_core.so",
-#    deps = [
-#        ":uipc_core_lib",
-#        "@cpptrace//:cpptrace",
-#        "@spdlog//:spdlog",
-#        "@tinygltf//:tinygltf",
-#    ],
-#    visibility = ["//visibility:public"],
-#)
+cc_shared_library(
+   name = "uipc_core_shared",
+   shared_lib_name = "libuipc_core.so",
+   deps = [
+       ":uipc_core_lib",
+   ],
+   visibility = ["//visibility:public"],
+)

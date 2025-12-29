@@ -26,11 +26,9 @@ cc_library(
     visibility = ["//src:__subpackages__"],
     deps = [
         "//:uipc_include",
-        "@cppitertools",
-        "@cpptrace",
-        "@eigen",
-        "@nlohmann_json//:json",
-        "@spdlog",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
+        "//src/io:uipc_io_lib",
     ],
     alwayslink = 1,
 )
@@ -48,5 +46,10 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":uipc_sanity_check_lib",
+    ],
+    dynamic_deps = [
+        "//src/core:uipc_core_shared",
+        "//src/geometry:uipc_geometry_shared",
+        "//src/io:uipc_io_shared",
     ],
 )

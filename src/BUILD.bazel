@@ -1,5 +1,5 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_cuda//cuda:defs.bzl", "cuda_library")
 
 uipc_backend_commons_srcs = glob(["backends/common/**/*.cpp"])
@@ -28,8 +28,9 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:uipc_include",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
         "@cppitertools",
-        "@cpptrace",
         "@eigen",
         "@nlohmann_json//:json",
         "@spdlog",
@@ -64,17 +65,13 @@ cuda_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:uipc_include",
-        "@cppitertools",
-        "@cpptrace",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
         "@cuda//:cub",
         "@cuda//:cublas",
         "@cuda//:cusolver",
         "@cuda//:cusparse",
-        "@eigen",
         "@hugooole_muda//:muda",
-        "@magic_enum",
-        "@nlohmann_json//:json",
-        "@spdlog",
     ],
 )
 
@@ -82,7 +79,6 @@ cc_library(
     name = "uipc_backend_cuda_cpp",
     srcs = uipc_backend_cuda_cpp_srcs,
     hdrs = uipc_backend_commons_hdrs,
-    alwayslink = 1,
     copts = [
         "-std=c++20",
     ] + select({
@@ -96,20 +92,23 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [":uipc_backends_cuda_lib"],
+    alwayslink = 1,
 )
 
 cc_binary(
     name = "uipc_backend_cuda",
-    linkshared = True,
-    linkstatic = False,
-    deps = [
-        ":uipc_backend_cuda_cpp",
-        "//src/core:uipc_core_lib",
-        "//src/geometry:uipc_geometry_lib",
+    dynamic_deps = [
+        "//src/core:uipc_core_shared",
+        "//src/geometry:uipc_geometry_shared",
     ],
     linkopts = select({
         "@platforms//os:linux": ["-Wl,--export-dynamic"],
         "//conditions:default": [],
     }),
+    linkshared = True,
+    linkstatic = False,
     visibility = ["//visibility:public"],
+    deps = [
+        ":uipc_backend_cuda_cpp",
+    ],
 )

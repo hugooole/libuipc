@@ -23,14 +23,15 @@ cc_library(
     ],
 )
 
-#cc_shared_library(
-#    name = "uipc_constitution_shared",
-#    shared_lib_name = "libuipc_constitution.so",
-#    visibility = ["//visibility:public"],
-#    deps = [
-#        ":uipc_constitution_lib",
-#    ],
-#    dynamic_deps = [
-#        "//src/geometry:uipc_geometry_shared",
-#    ],
-#)
+cc_shared_library(
+   name = "uipc_constitution_shared",
+   shared_lib_name = "libuipc_constitution.so",
+   visibility = ["//visibility:public"],
+   deps = [
+       ":uipc_constitution_lib",
+   ],
+   dynamic_deps = [
+       "//src/geometry:uipc_geometry_shared",
+       "//src/core:uipc_core_shared",
+   ],
+)
