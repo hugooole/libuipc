@@ -1,9 +1,11 @@
+#include "uipc/common/exception.h"
 #include "uipc/common/json.h"
 #include <filesystem>
 #include <uipc/uipc.h>
 #include <uipc/constitution/affine_body_constitution.h>
 
 #include "tools/cpp/runfiles/runfiles.h"
+#include "uipc/common/logger.h"
 
 using bazel::tools::cpp::runfiles::Runfiles;
 
@@ -16,7 +18,7 @@ std::string find_module_dir(const char* argv0)
 
     // workspace_name/path/to/file
     auto so_path = runfiles->Rlocation(
-        "_main/src/libuipc_backend_cuda.so");
+        "libuipc/src/libuipc_backend_cuda.so");
 
     return std::filesystem::path(so_path).parent_path().string();
 }
@@ -29,22 +31,28 @@ int main(int argc, char** argv)
     using namespace uipc::constitution;
     namespace fs = std::filesystem;
 
+    logger::set_level(Logger::Level::debug);
     Json uipc_config = Json::object();
     uipc_config["module_dir"] = find_module_dir(argv[0]);
+    logger::info("(ZHIGUO)module_dir: {}", uipc_config["module_dir"].get<std::string>());
     init(uipc_config);
 
+    // try {
     // Engine engine{"none"};
     Engine engine{"cuda"};
 
     World world{engine};
     auto  config      = Scene::default_config();
+    config["sanity_check"]["enable"] = false;
     config["gravity"] = Vector3{0, -9.8, 0};
     config["dt"]      = 0.01_s;
 
     Scene scene{config};
     {
         // create constitution and contact model
-        AffineBodyConstitution abd;
+        Json abd_config    = AffineBodyConstitution::default_config();
+        abd_config["name"] = "ARAP";
+        AffineBodyConstitution abd {abd_config};
         scene.constitution_tabular().insert(abd);
 
         // friction ratio and contact resistance
@@ -98,19 +106,27 @@ int main(int argc, char** argv)
         }
     }
 
+    logger::info("(ZHIGUO)world.init(scene) start");
     world.init(scene);
+    // logger::info("(ZHIGUO)world.init(scene) done");
 
-    SceneIO sio{scene};
+    // SceneIO sio{scene};
 
-    auto this_output_path = fs::path("/home/ps/Projects/libuipc/output/examples/hello_affine_body/");
+    // auto this_output_path = fs::path("/home/ps/Projects/libuipc/output/examples/hello_affine_body/");
 
-    sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path.string(), 0));
+    // sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path.string(), 0));
 
-    for(int i = 1; i < 50; i++)
-    {
-        world.advance();
-        world.sync();
-        world.retrieve();
-        sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path.string(), i));
-    }
+    // for(int i = 1; i < 50; i++)
+    // {
+    //     world.advance();
+    //     world.sync();
+    //     world.retrieve();
+    //     sio.write_surface(fmt::format("{}scene_surface{}.obj", this_output_path.string(), i));
+    // }
+    // } catch (const uipc::Exception& e) {
+    //     logger::error("(ZHIGUO)error: {}", e.what());
+    //     return 1;
+    // }
+
+    return 0;
 }

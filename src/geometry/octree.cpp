@@ -5,8 +5,8 @@
 #include <Octree/octree.h>
 #include <Octree/adaptor.eigen.h>
 #else
-#include <octree.h>
-#include <adaptor.eigen.h>
+#include "octree.h"
+#include "adaptor.eigen.h"
 #endif
 #include <Eigen/Dense>
 namespace uipc::geometry

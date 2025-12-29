@@ -5,5 +5,35 @@ common --cxxopt=-std=c++20
 
 build --flag_alias=cuda_archs=@rules_cuda//cuda:archs
 build --cuda_archs=compute_89:compute_89,sm_89
-build -c opt
 build --jobs=16
+build --compilation_mode=dbg
+build --copt=-g
+build --copt=-fno-omit-frame-pointer
+build --copt=-fexceptions
+build --strip=never
+# Enable colorful output of GCC
+build --cxxopt="-fdiagnostics-color=always"
+
+# If a command fails, print out the full command line.
+build --verbose_failures
+# Work around the sandbox issue.
+build --spawn_strategy=local
+
+build:reldbg -c opt
+build:reldbg --strip=never
+build:reldbg --copt=-g
+build:reldbg --copt=-fno-omit-frame-pointer
+
+build:release -c opt
+build:release --strip=always
+build:release --copt=-O3
+build:release --copt=-DNDEBUG
+build:release --copt=-march=native
+build:release --copt=-mtune=native
+build:release --copt=-mfpmath=sse
+build:release --copt=-msse4.2
+build:release --copt=-msse4.1
+build:release --copt=-msse4
+build:release --copt=-msse3
+build:release --copt=-msse2
+build:release --copt=-msse

@@ -1,6 +1,6 @@
 #pragma once
 #include <uipc/io/scene_io.h>
-#include <tiny_gltf.h>
+#include "tiny_gltf.h"
 
 namespace uipc
 {

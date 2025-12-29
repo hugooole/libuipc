@@ -1,17 +1,6 @@
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_shared_library")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cuda//cuda:defs.bzl", "cuda_library")
-
-cc_library(
-    name = "uipc",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//src/constitution:uipc_constitution",
-        "//src/core:uipc_core",
-        "//src/geometry:uipc_geometry",
-        "//src/io:uipc_io",
-        "//src/sanity_check:uipc_sanity_check",
-    ],
-)
 
 uipc_backend_commons_srcs = glob(["backends/common/**/*.cpp"])
 
@@ -52,7 +41,7 @@ uipc_backend_cuda_cu_srcs = glob(["backends/cuda/**/*.cu"])
 uipc_backend_cuda_cpp_srcs = glob(["backends/cuda/**/*.cpp"]) + uipc_backend_commons_srcs
 
 cuda_library(
-    name = "uipc_backends_cuda_cu",
+    name = "uipc_backends_cuda_lib",
     srcs = uipc_backend_cuda_cu_srcs,
     hdrs = glob([
         "backends/cuda/**/*.h",
@@ -72,7 +61,7 @@ cuda_library(
         "backends/cuda",
     ],
     rdc = True,
-    visibility = ["//src:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//:uipc_include",
         "@cppitertools",
@@ -83,54 +72,44 @@ cuda_library(
         "@cuda//:cusparse",
         "@eigen",
         "@hugooole_muda//:muda",
+        "@magic_enum",
         "@nlohmann_json//:json",
         "@spdlog",
     ],
 )
 
-# 然后编译 C++ 文件并链接 CUDA 库
 cc_library(
-    name = "uipc_backends_cuda",
+    name = "uipc_backend_cuda_cpp",
     srcs = uipc_backend_cuda_cpp_srcs,
-    hdrs = glob([
-        "backends/cuda/**/*.h",
-        "backends/cuda/**/*.hpp",
-        "backends/cuda/**/*.inl",
-    ]) + uipc_backend_commons_hdrs,
+    hdrs = uipc_backend_commons_hdrs,
+    alwayslink = 1,
     copts = [
         "-std=c++20",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["-fvisibility=default"],
+        "//conditions:default": [],
+    }),
     defines = [
         "UIPC_BACKEND_EXPORT_DLL",
         "UIPC_BACKEND_DIR=R\\\"(/home/ps/Projects/libuipc/src/backends)\\\"",
         "UIPC_BACKEND_NAME=R\\\"(cuda)\\\"",
     ],
-    includes = [
-        ".",
-        "backends/cuda",
-    ],
     visibility = ["//visibility:public"],
-    deps = [
-        ":uipc_backends_cuda_cu",  # 链接 CUDA 库
-        "//:uipc_include",
-        "//src/geometry:uipc_geometry",
-        "@cppitertools",
-        "@cpptrace",
-        "@eigen",
-        "@nlohmann_json//:json",
-        "@spdlog",
-    ],
+    deps = [":uipc_backends_cuda_lib"],
 )
 
-cc_shared_library(
-    name = "uipc_backends_cuda_shared",
-    shared_lib_name = "libuipc_backend_cuda.so",
-    visibility = ["//visibility:public"],
-    dynamic_deps = [
-        "//src/geometry:uipc_geometry_shared",
-        "//src/core:uipc_core_shared",
-    ],
+cc_binary(
+    name = "uipc_backend_cuda",
+    linkshared = True,
+    linkstatic = False,
     deps = [
-        ":uipc_backends_cuda",
+        ":uipc_backend_cuda_cpp",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
     ],
+    linkopts = select({
+        "@platforms//os:linux": ["-Wl,--export-dynamic"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
 )

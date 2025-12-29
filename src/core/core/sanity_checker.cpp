@@ -22,7 +22,7 @@ static S<dylib> load_sanity_check_module()
     // if not found, load it
     auto& uipc_config = uipc::config();
     auto  this_module =
-        uipc::make_shared<dylib>(uipc_config["module_dir"].get<std::string>(),
+        uipc::make_shared<dylib>(uipc_config["module_dir"].get<std::string>() + "/sanity_check",
                                  "uipc_sanity_check");
 
     std::string_view module_name = "sanity_check";

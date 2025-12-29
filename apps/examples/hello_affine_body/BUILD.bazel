@@ -3,12 +3,23 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 cc_binary(
     name = "hello_affine_body",
     srcs = ["main.cpp"],
-    deps = [
-        "//src:uipc",
-        "@bazel_tools//tools/cpp/runfiles",
-    ],
     data = [
-        "//src:uipc_backends_cuda_shared",
+        "//src:uipc_backend_cuda",
+        "//src/sanity_check:uipc_sanity_check",
     ],
+    linkstatic = False,
     visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "//src/constitution:uipc_constitution_lib",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
+        "//src/io:uipc_io_lib",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@cppitertools",
+        "@cpptrace",
+        "@eigen",
+        "@nlohmann_json//:json",
+        "@spdlog",
+    ],
 )
