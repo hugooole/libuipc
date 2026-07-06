@@ -1,12 +1,16 @@
-#include <catch2/catch_all.hpp>
-#include <app/asset_dir.h>
 #include <uipc/uipc.h>
 #include <uipc/constitution/affine_body_constitution.h>
+#include <uipc/io/simplicial_complex_io.h>
+#include <uipc/io/scene_io.h>
 #include <filesystem>
 #include <fstream>
 #include <numbers>
 
-int main()
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+int main(int argc, char** argv)
 {
     using namespace uipc;
     using namespace uipc::core;
@@ -16,10 +20,36 @@ int main()
 
     logger::set_level(spdlog::level::info);
 
-    std::string tetmesh_dir{AssetDir::tetmesh_path()};
-    auto        this_output_path = AssetDir::output_path(__FILE__);
-    auto        this_folder      = AssetDir::folder(__FILE__);
+    std::string error;
+    auto        runfiles = Runfiles::Create(argv[0], &error);
+    if(!runfiles)
+        throw std::runtime_error(error);
 
+    // module_dir: directory holding the backend .so (and sanity_check/ subdir)
+    auto backend_so =
+        runfiles->Rlocation("libuipc/src/libuipc_backend_cuda.so");
+    auto module_dir = fs::path(backend_so).parent_path().string();
+
+    Json uipc_config          = Json::object();
+    uipc_config["module_dir"] = module_dir;
+    init(uipc_config);
+
+    // tetmesh assets and scene json, resolved via runfiles
+    std::string tetmesh_dir =
+        (fs::path(runfiles->Rlocation("libuipc/assets/sim_data/tetmesh/cube.msh"))
+             .parent_path()
+         / "")
+            .string();
+    std::string this_folder =
+        (fs::path(runfiles->Rlocation(
+                      "libuipc/apps/examples/wrecking_ball/wrecking_ball.json"))
+             .parent_path()
+         / "")
+            .string();
+
+    // write outputs next to the current working directory
+    auto this_output_path = (fs::current_path() / "wrecking_ball_output" / "").string();
+    fs::create_directories(this_output_path);
 
     Engine engine{"cuda", this_output_path};
     World  world{engine};

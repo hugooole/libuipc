@@ -18,7 +18,7 @@ cc_library(
     ],
     defines = [
         "UIPC_BACKEND_EXPORT_DLL",
-        "UIPC_BACKEND_DIR=R\\\"(/home/ps/Projects/libuipc/src/backends)\\\"",
+        "UIPC_BACKEND_DIR=R\\\"(src/backends)\\\"",
         "UIPC_BACKEND_NAME=R\\\"(none)\\\"",
     ],
     includes = [
@@ -54,7 +54,7 @@ cuda_library(
     ],
     defines = [
         "UIPC_BACKEND_EXPORT_DLL",
-        "UIPC_BACKEND_DIR=R\\\"(/home/ps/Projects/libuipc/src/backends)\\\"",
+        "UIPC_BACKEND_DIR=R\\\"(src/backends)\\\"",
         "UIPC_BACKEND_NAME=R\\\"(cuda)\\\"",
     ],
     includes = [
@@ -87,7 +87,7 @@ cc_library(
     }),
     defines = [
         "UIPC_BACKEND_EXPORT_DLL",
-        "UIPC_BACKEND_DIR=R\\\"(/home/ps/Projects/libuipc/src/backends)\\\"",
+        "UIPC_BACKEND_DIR=R\\\"(src/backends)\\\"",
         "UIPC_BACKEND_NAME=R\\\"(cuda)\\\"",
     ],
     visibility = ["//visibility:public"],

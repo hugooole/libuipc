@@ -3,7 +3,7 @@ include(uipc_utils)
 set(app_name hello_affine_body)
 
 add_executable(${app_name})
-target_sources(${app_name} PRIVATE "main.cpp")
+target_sources(${app_name} PRIVATE "main_cmake.cpp")
 target_link_libraries(${app_name} PRIVATE uipc::uipc app)
 
 uipc_target_set_output_directory(${app_name})

@@ -16,6 +16,15 @@ bazel_dep(name = "tinygltf", version = "2.9.6")
 bazel_dep(name = "dylib", version = "2.2.1")
 bazel_dep(name = "spdlog", version = "1.16.0.bcr.1")
 bazel_dep(name = "cpptrace", version = "1.0.4.bcr.1")
+# cpptrace's registry BUILD links LLVM libunwind (CPPTRACE_UNWIND_WITH_LIBUNWIND),
+# which re-exports the _Unwind_* ABI and interposes libgcc's, breaking C++ exception
+# unwinding at runtime (abort in _Unwind_Resume). Switch to the libgcc backend
+# (CPPTRACE_UNWIND_WITH_UNWIND) and drop the @libunwind dep.
+single_version_override(
+    module_name = "cpptrace",
+    patch_strip = 1,
+    patches = ["//patches:cpptrace_unwind.patch"],
+)
 bazel_dep(name = "onetbb", version = "2022.0.0")
 bazel_dep(name = "octree", version = "2.5")
 bazel_dep(name = "libigl", version = "2.6.0")
