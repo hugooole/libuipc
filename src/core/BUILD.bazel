@@ -53,5 +53,10 @@ cc_shared_library(
    deps = [
        ":uipc_core_lib",
    ],
+   # tinygltf is also linked statically into uipc_io_shared; export it here
+   # so cc_shared_library doesn't treat it as an unexported duplicate.
+   exports_filter = [
+       "@tinygltf//:tinygltf",
+   ],
    visibility = ["//visibility:public"],
 )

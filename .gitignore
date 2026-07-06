@@ -42,3 +42,7 @@ vsxmake*/
 # bazel
 bazel-*
 MODULE.bazel.lock
+
+.codegraph
+.serena
+docs/doxygen
