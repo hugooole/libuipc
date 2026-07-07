@@ -45,3 +45,8 @@ vsxmake*/
 # venv
 .venv/
 .omc/
+
+docs/dexygen
+bazel-*/
+.codegraph/
+.serena/

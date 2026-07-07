@@ -24,6 +24,20 @@ build --verbose_failures
 # Work around the sandbox issue.
 build --spawn_strategy=local
 
+# ---------------------------------------------------------------------------
+# Shared remote cache (bazel-remote), hosted on 192.168.10.81.
+# Compilation still runs locally; results are shared through the cache server.
+# ---------------------------------------------------------------------------
+build --remote_cache=grpc://192.168.10.81:9092
+# Upload our local build results so teammates can reuse them.
+build --remote_upload_local_results=true
+# If the cache server is unreachable, fall back to local execution instead of failing.
+build --remote_local_fallback
+# Don't let a slow/broken cache stall the build for long.
+build --remote_timeout=60
+# Also keep a local on-disk cache (fast rebuilds even when offline).
+build --disk_cache=~/.cache/bazel-disk-cache
+
 build:reldbg -c opt
 build:reldbg --strip=never
 build:reldbg --copt=-g
