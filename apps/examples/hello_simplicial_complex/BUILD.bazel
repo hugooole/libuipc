@@ -1,0 +1,27 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+cc_binary(
+    name = "hello_simplicial_complex",
+    srcs = ["main_bazel.cpp"],
+    data = [
+        "//src:uipc_backend_cuda",
+        "//src/sanity_check:uipc_sanity_check",
+    ],
+    linkstatic = False,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "//apps/bazel_app:bazel_env",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
+        "//src/io:uipc_io_lib",
+        "//src/constitution:uipc_constitution_lib",
+        "@bazel_tools//tools/cpp/runfiles",
+    ],
+    dynamic_deps = [
+        "//src/core:uipc_core_shared",
+        "//src/geometry:uipc_geometry_shared",
+        "//src/io:uipc_io_shared",
+        "//src/constitution:uipc_constitution_shared",
+    ],
+)

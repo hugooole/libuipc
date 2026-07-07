@@ -1,0 +1,15 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# Bazel-only helper for the example targets: resolves module_dir, assets, and
+# output directories via runfiles instead of the compile-time absolute paths
+# used by the CMake/xmake `apps/app` library.
+cc_library(
+    name = "bazel_env",
+    hdrs = ["bazel_env.h"],
+    includes = [".."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "@bazel_tools//tools/cpp/runfiles",
+    ],
+)

@@ -1,0 +1,62 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_shared_library")
+load("//bazel:version.bzl", "UIPC_VERSION_MAJOR", "UIPC_VERSION_MINOR", "UIPC_VERSION_PATCH")
+
+cc_library(
+    name = "uipc_core_lib",
+    srcs = glob(["**/*.cpp"]),
+    hdrs = glob(["**/*.h"]),
+    alwayslink = 1,
+    copts = [
+        "-std=c++20",
+        "-Iexternal/cppitertools+",  # TODO: need to add the include path for cppitertools
+    ] + select({
+        "@platforms//os:windows": [
+            "/bigobj",
+        ],
+        "//conditions:default": [],
+    }),
+    defines = [
+        "UIPC_RUNTIME_CHECK=1",
+        "UIPC_VERSION_MAJOR={}".format(UIPC_VERSION_MAJOR),
+        "UIPC_VERSION_MINOR={}".format(UIPC_VERSION_MINOR),
+        "UIPC_VERSION_PATCH={}".format(UIPC_VERSION_PATCH),
+    ] + select({
+        "@platforms//os:windows": [
+            "NOMINMAX",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "@platforms//os:linux": ["-ldl"],
+        "//conditions:default": [],
+    }),
+    local_defines = [
+        "UIPC_CORE_EXPORT_DLL=1",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "@cppitertools",
+        "@cpptrace",
+        "@dylib",
+        "@eigen",
+        "@magic_enum",
+        "@nlohmann_json//:json",
+        "@spdlog",
+        "@tinygltf",
+    ],
+)
+
+cc_shared_library(
+   name = "uipc_core_shared",
+   shared_lib_name = "libuipc_core.so",
+   deps = [
+       ":uipc_core_lib",
+   ],
+   # tinygltf is also linked statically into uipc_io_shared; export it here
+   # so cc_shared_library doesn't treat it as an unexported duplicate.
+   exports_filter = [
+       "@tinygltf//:tinygltf",
+   ],
+   visibility = ["//visibility:public"],
+)

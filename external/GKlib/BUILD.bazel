@@ -1,0 +1,24 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# GKlib — support library for METIS. Vendored under external/GKlib; built here
+# for Bazel (the CMake build uses external/GKlib/CMakeLists.txt).
+cc_library(
+    name = "GKlib",
+    srcs = glob(["src/*.c"]),
+    hdrs = glob(["include/*.h"]),
+    copts = [
+        "-w",  # third-party C; silence its warnings
+        "-fPIC",
+    ],
+    defines = [
+        "LINUX",
+        "HAVE_EXECINFO_H",
+        "HAVE_GETLINE",
+        "HAVE_REGEX_H",
+        "NDEBUG",
+        "NDEBUG2",
+    ],
+    includes = ["include"],
+    linkopts = ["-lm"],
+    visibility = ["//visibility:public"],
+)

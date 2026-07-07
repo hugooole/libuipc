@@ -1,0 +1,127 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cuda//cuda:defs.bzl", "cuda_library")
+
+uipc_backend_commons_srcs = glob(["backends/common/**/*.cpp"])
+
+uipc_backend_commons_hdrs = glob([
+    "backends/common/**/*.h",
+    "backends/common/**/*.inl",
+])
+
+cc_library(
+    name = "uipc_backends_none",
+    srcs = glob(["backends/none/**/*.cpp"]) + uipc_backend_commons_srcs,
+    hdrs = glob(["backends/none/**/*.h"]) + uipc_backend_commons_hdrs,
+    copts = [
+        "-std=c++20",
+        # __FILE__ is exec-root-relative under Bazel (e.g. src/backends/common/foo.cpp),
+        # matching CMake's per-source UIPC_RELATIVE_SOURCE_FILE. Combined with an empty
+        # UIPC_PROJECT_DIR and UIPC_BACKEND_DIR=src/backends, BackendPathTool computes the
+        # output subdir purely lexically, with no absolute paths.
+        "-DUIPC_RELATIVE_SOURCE_FILE=__FILE__",
+    ],
+    defines = [
+        "UIPC_BACKEND_EXPORT_DLL",
+        "UIPC_BACKEND_DIR=R\\\"(src/backends)\\\"",
+        "UIPC_BACKEND_NAME=R\\\"(none)\\\"",
+        "UIPC_PROJECT_DIR=R\\\"()\\\"",
+    ],
+    includes = [
+        ".",
+        "backends/none",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
+        "@cppitertools",
+        "@eigen",
+        "@nlohmann_json//:json",
+        "@spdlog",
+    ],
+)
+
+uipc_backend_cuda_cu_srcs = glob(["backends/cuda/**/*.cu"])
+
+uipc_backend_cuda_cpp_srcs = glob(["backends/cuda/**/*.cpp"]) + uipc_backend_commons_srcs
+
+cuda_library(
+    name = "uipc_backends_cuda_lib",
+    srcs = uipc_backend_cuda_cu_srcs,
+    hdrs = glob([
+        "backends/cuda/**/*.h",
+        "backends/cuda/**/*.hpp",
+        "backends/cuda/**/*.inl",
+    ]) + uipc_backend_commons_hdrs,
+    copts = [
+        "-std=c++20",
+        # __FILE__ stands in for CMake's per-source UIPC_RELATIVE_SOURCE_FILE.
+        # If nvcc bakes an absolute __FILE__ (tripping BackendPathTool's is_relative
+        # assert), a -ffile-prefix-map is added below after verification.
+        "-DUIPC_RELATIVE_SOURCE_FILE=__FILE__",
+    ],
+    defines = [
+        "UIPC_BACKEND_EXPORT_DLL",
+        "UIPC_BACKEND_DIR=R\\\"(src/backends)\\\"",
+        "UIPC_BACKEND_NAME=R\\\"(cuda)\\\"",
+        "UIPC_PROJECT_DIR=R\\\"()\\\"",
+    ],
+    includes = [
+        ".",
+        "backends/cuda",
+    ],
+    rdc = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
+        "@cuda//:cub",
+        "@cuda//:cublas",
+        "@cuda//:cusolver",
+        "@cuda//:cusparse",
+        "@hugooole_muda//:muda",
+    ],
+)
+
+cc_library(
+    name = "uipc_backend_cuda_cpp",
+    srcs = uipc_backend_cuda_cpp_srcs,
+    hdrs = uipc_backend_commons_hdrs,
+    copts = [
+        "-std=c++20",
+        "-DUIPC_RELATIVE_SOURCE_FILE=__FILE__",
+    ] + select({
+        "@platforms//os:linux": ["-fvisibility=default"],
+        "//conditions:default": [],
+    }),
+    defines = [
+        "UIPC_BACKEND_EXPORT_DLL",
+        "UIPC_BACKEND_DIR=R\\\"(src/backends)\\\"",
+        "UIPC_BACKEND_NAME=R\\\"(cuda)\\\"",
+        "UIPC_PROJECT_DIR=R\\\"()\\\"",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":uipc_backends_cuda_lib"],
+    alwayslink = 1,
+)
+
+cc_binary(
+    name = "uipc_backend_cuda",
+    dynamic_deps = [
+        "//src/core:uipc_core_shared",
+        "//src/geometry:uipc_geometry_shared",
+    ],
+    linkopts = select({
+        "@platforms//os:linux": ["-Wl,--export-dynamic"],
+        "//conditions:default": [],
+    }),
+    linkshared = True,
+    linkstatic = False,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":uipc_backend_cuda_cpp",
+    ],
+)

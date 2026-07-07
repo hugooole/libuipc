@@ -1,0 +1,22 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# METIS — graph partitioning. Vendored under external/METIS; built here for
+# Bazel (the CMake build uses external/METIS/CMakeLists.txt). Depends on GKlib.
+cc_library(
+    name = "metis",
+    srcs = glob(["libmetis/*.c"]),
+    hdrs = glob([
+        "libmetis/*.h",
+        "include/*.h",
+    ]),
+    copts = [
+        "-w",  # third-party C; silence its warnings
+        "-fPIC",
+    ],
+    includes = [
+        "include",
+        "libmetis",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["//external/GKlib"],
+)
