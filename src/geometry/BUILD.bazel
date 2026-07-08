@@ -1,0 +1,54 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_shared_library")
+
+cc_library(
+    name = "uipc_geometry_lib",
+    srcs = glob(["**/*.cpp"]),
+    hdrs = glob(
+        [
+            "**/*.h",
+            "**/*.inl",
+            "**/*.hpp",
+        ],
+        allow_empty = True,
+    ),
+    linkstatic = False,
+    alwayslink = 1,
+    includes = [
+        ".",
+        "affine_body",
+        "bvh",
+        "graph_coloring",
+        "implicit_geometries",
+    ],
+    local_defines = [
+        "UIPC_GEOMETRY_EXPORT_DLL=1",
+    ],
+    # Bake $ORIGIN so the wheel's flat uipc/_native/ layout resolves sibling .so.
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-z,origin",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "//external/METIS:metis",
+        "//src/core:uipc_core_lib",
+        "@cppitertools",
+        "@libigl//:igl_core",
+        "@octree//:octree",
+        "@onetbb//:tbb",
+    ],
+)
+
+cc_shared_library(
+   name = "uipc_geometry_shared",
+   shared_lib_name = "libuipc_geometry.so",
+   deps = [
+       ":uipc_geometry_lib",
+   ],
+   dynamic_deps = ["//src/core:uipc_core_shared"],
+   visibility = ["//visibility:public"],
+)

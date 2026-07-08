@@ -1,0 +1,67 @@
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
+# Bazel-native wheel for pyuipc.
+#
+# Layout mirrors the CMake wheel: pure-Python sources under uipc/, and every runtime
+# .so flattened into uipc/_native/ (because python/src/uipc/__init__.py sets
+# module_dir = Path(pyuipc.__file__).parent). The .so resolve each other via the
+# $ORIGIN rpath baked into each target (see src/**/BUILD.bazel).
+#
+# Build with -c opt for a shippable size, e.g.:
+#   bazel build //python:pyuipc_wheel -c opt
+# (the default .bazelrc compilation_mode is dbg, which makes a ~300MB extension.)
+
+# Each runtime .so, staged into src/uipc/_native/<basename> so that
+# strip_path_prefixes=["python/src"] maps it to uipc/_native/<basename> in the wheel.
+_STAGED_SOLIBS = [
+    ("//src/core:uipc_core_shared", "libuipc_core.so"),
+    ("//src/geometry:uipc_geometry_shared", "libuipc_geometry.so"),
+    ("//src/io:uipc_io_shared", "libuipc_io.so"),
+    ("//src/constitution:uipc_constitution_shared", "libuipc_constitution.so"),
+    ("//src:uipc_backend_cuda", "libuipc_backend_cuda.so"),
+    ("//src/sanity_check:uipc_sanity_check", "libuipc_sanity_check.so"),
+    ("//src/pybind:pyuipc.so", "pyuipc.so"),
+]
+
+[
+    genrule(
+        name = "stage_" + basename.replace(".", "_"),
+        srcs = [target],
+        outs = ["src/uipc/_native/" + basename],
+        cmd = "cp $< $@",
+    )
+    for (target, basename) in _STAGED_SOLIBS
+]
+
+filegroup(
+    name = "native_solibs",
+    srcs = [":stage_" + basename.replace(".", "_") for (_, basename) in _STAGED_SOLIBS],
+)
+
+# Pure-Python package sources (uipc/**.py). The USD adapter etc. are plain .py, kept.
+filegroup(
+    name = "py_srcs",
+    srcs = glob(["src/uipc/**/*.py"]),
+)
+
+py_wheel(
+    name = "pyuipc_wheel",
+    abi = "cp311",  # extension is built against the hermetic CPython 3.11 toolchain
+    distribution = "pyuipc",
+    platform = "linux_x86_64",
+    python_requires = ">=3.10,<3.14",
+    python_tag = "cp311",
+    requires = [
+        "numpy",
+        "matplotlib",
+        "polyscope>=2.5.0,<3.0.0",
+        "huggingface_hub",
+    ],
+    strip_path_prefixes = ["python/src"],
+    version = "0.9.0",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":native_solibs",
+        ":py_srcs",
+    ],
+)

@@ -1,0 +1,49 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+
+# The pyuipc Python extension. Mirrors the CMake `pybind11_add_module(pyuipc)` target
+# and the example cc_binary link model: headers come from the *_lib deps, the actual
+# object code is linked dynamically via the *_shared libs (dynamic_deps), and the two
+# dlopen'd plugins (backend_cuda, sanity_check) ride along as runtime data.
+#
+# USD bindings (pyuipc/usd/**) are gated behind UIPC_WITH_USD_SUPPORT in module.cpp and
+# depend on OpenUSD, which is not wired into the Bazel build — exclude those sources.
+pybind_extension(
+    name = "pyuipc",
+    srcs = glob(
+        [
+            "pyuipc/**/*.cpp",
+            "pyuipc/**/*.h",
+        ],
+        exclude = ["pyuipc/usd/**"],
+    ),
+    copts = ["-std=c++20"],
+    defines = ["PYBIND11_DETAILED_ERROR_MESSAGES"],
+    includes = ["."],  # so <pyuipc/...> resolves (BUILD lives at src/pybind)
+    # A wheel has no runfiles: pyuipc.so and the libuipc_*.so are copied as flat
+    # siblings into uipc/_native/, so bake $ORIGIN to resolve them there.
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-z,origin",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:uipc_include",
+        "//src/constitution:uipc_constitution_lib",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
+        "//src/io:uipc_io_lib",
+    ],
+    dynamic_deps = [
+        "//src/constitution:uipc_constitution_shared",
+        "//src/core:uipc_core_shared",
+        "//src/geometry:uipc_geometry_shared",
+        "//src/io:uipc_io_shared",
+    ],
+    data = [
+        "//src:uipc_backend_cuda",
+        "//src/sanity_check:uipc_sanity_check",
+    ],
+)

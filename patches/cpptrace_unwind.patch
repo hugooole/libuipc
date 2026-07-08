@@ -1,0 +1,19 @@
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -60,7 +60,7 @@
+         "@platforms//os:linux": [
+             "CPPTRACE_HAS_DL_FIND_OBJECT",
+             "CPPTRACE_DEMANGLE_WITH_CXXABI",
+-            "CPPTRACE_UNWIND_WITH_LIBUNWIND",
++            "CPPTRACE_UNWIND_WITH_UNWIND",
+             "CPPTRACE_GET_SYMBOLS_WITH_LIBDWARF",
+         ],
+         "@platforms//os:macos": [
+@@ -86,7 +86,6 @@
+     deps = select({
+         "@platforms//os:linux": [
+             "@libdwarf",
+-            "@libunwind",
+         ],
+         "@platforms//os:macos": [
+             "@libdwarf",

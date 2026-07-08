@@ -1,0 +1,59 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+cc_library(
+    name = "uipc_sanity_check_lib",
+    srcs = glob(["**/*.cpp"]),
+    hdrs = glob(
+        [
+            "**/*.h",
+            "**/*.inl",
+            "**/*.hpp",
+        ],
+        allow_empty = True,
+    ),
+    includes = ["."],
+    copts = [
+        "-std=c++20",
+        "-Iexternal/cppitertools+",  # TODO: need to add the include path for cppitertools
+    ] + select({
+        "@platforms//os:linux": ["-fvisibility=default"],
+        "//conditions:default": [],
+    }),
+    local_defines = [
+        "UIPC_SANITY_CHECK_EXPORT_DLL=1",
+    ],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//:uipc_include",
+        "//src/core:uipc_core_lib",
+        "//src/geometry:uipc_geometry_lib",
+        "//src/io:uipc_io_lib",
+    ],
+    alwayslink = 1,
+)
+
+cc_binary(
+    name = "uipc_sanity_check",
+    linkshared = 1,
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-Wl,--export-dynamic",
+            "-Wl,-u,uipc_init_module",
+            # $ORIGIN so the plugin resolves libuipc_core/geometry/io.so as flat
+            # siblings when dlopen'd from the wheel's uipc/_native/.
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-z,origin",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":uipc_sanity_check_lib",
+    ],
+    dynamic_deps = [
+        "//src/core:uipc_core_shared",
+        "//src/geometry:uipc_geometry_shared",
+        "//src/io:uipc_io_shared",
+    ],
+)
