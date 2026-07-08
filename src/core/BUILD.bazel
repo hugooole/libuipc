@@ -27,7 +27,13 @@ cc_library(
         "//conditions:default": [],
     }),
     linkopts = select({
-        "@platforms//os:linux": ["-ldl"],
+        # -ldl for the dylib module loader; $ORIGIN so the wheel's flat
+        # uipc/_native/ layout resolves sibling .so.
+        "@platforms//os:linux": [
+            "-ldl",
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-z,origin",
+        ],
         "//conditions:default": [],
     }),
     local_defines = [

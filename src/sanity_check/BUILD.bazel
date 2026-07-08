@@ -40,6 +40,10 @@ cc_binary(
         "@platforms//os:linux": [
             "-Wl,--export-dynamic",
             "-Wl,-u,uipc_init_module",
+            # $ORIGIN so the plugin resolves libuipc_core/geometry/io.so as flat
+            # siblings when dlopen'd from the wheel's uipc/_native/.
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-z,origin",
         ],
         "//conditions:default": [],
     }),

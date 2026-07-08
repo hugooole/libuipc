@@ -36,7 +36,7 @@ build --remote_local_fallback
 # Don't let a slow/broken cache stall the build for long.
 build --remote_timeout=60
 # Also keep a local on-disk cache (fast rebuilds even when offline).
-build --disk_cache=~/.cache/bazel-disk-cache
+# build --disk_cache=~/.cache/bazel-disk-cache
 
 build:reldbg -c opt
 build:reldbg --strip=never

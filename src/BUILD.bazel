@@ -104,7 +104,14 @@ cc_library(
         "UIPC_PROJECT_DIR=R\\\"()\\\"",
     ],
     visibility = ["//visibility:public"],
-    deps = [":uipc_backends_cuda_lib"],
+    deps = [
+        ":uipc_backends_cuda_lib",
+        # SimplicialComplexIO::write (debug dumps) lives in libuipc_io.so; declare it
+        # so the plugin gets a real NEEDED libuipc_io.so instead of relying on the
+        # symbol being in the process's global scope (which only happens to hold under
+        # `bazel run`, not when pyuipc.so is dlopen'd RTLD_LOCAL from the wheel).
+        "//src/io:uipc_io_lib",
+    ],
     alwayslink = 1,
 )
 
@@ -113,13 +120,23 @@ cc_binary(
     dynamic_deps = [
         "//src/core:uipc_core_shared",
         "//src/geometry:uipc_geometry_shared",
+        "//src/io:uipc_io_shared",
     ],
     linkopts = select({
-        "@platforms//os:linux": ["-Wl,--export-dynamic"],
+        "@platforms//os:linux": [
+            "-Wl,--export-dynamic",
+            # $ORIGIN so the plugin resolves libuipc_core/geometry.so as flat
+            # siblings when dlopen'd from the wheel's uipc/_native/.
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-z,origin",
+        ],
         "//conditions:default": [],
     }),
     linkshared = True,
-    linkstatic = False,
+    # Absorb the backend cpp + cuda objects into the single plugin .so (only
+    # libuipc_core/geometry stay dynamic via dynamic_deps). linkstatic=False would
+    # emit the _cpp lib as a separate intermediate solib that a wheel can't ship.
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         ":uipc_backend_cuda_cpp",

@@ -46,7 +46,10 @@ vsxmake*/
 .venv/
 .omc/
 
-docs/dexygen
-bazel-*/
+docs/doxygen/
+# Bazel convenience symlinks are symlinks, not dirs — no trailing slash, or the
+# pattern won't match them.
+bazel-*
+MODULE.bazel.lock
 .codegraph/
 .serena/

@@ -15,6 +15,14 @@ cc_library(
     local_defines = [
         "UIPC_CONSTITUTION_EXPORT_DLL=1",
     ],
+    # Bake $ORIGIN so the wheel's flat uipc/_native/ layout resolves sibling .so.
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-z,origin",
+        ],
+        "//conditions:default": [],
+    }),
     visibility = ["//visibility:public"],
     deps = [
         "//:uipc_include",
